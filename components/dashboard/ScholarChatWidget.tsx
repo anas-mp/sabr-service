@@ -3,22 +3,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, X, Send, Bot, User } from 'lucide-react'
-import { askScholar } from '@/app/actions/scholar-ai'
-
-interface Message {
-    id: string
-    role: 'user' | 'scholar'
-    content: string
-}
+import { useChat } from 'ai/react'
 
 export function ScholarChatWidget() {
     const [isOpen, setIsOpen] = useState(false)
-    const [input, setInput] = useState('')
-    const [messages, setMessages] = useState<Message[]>([
-        { id: '1', role: 'scholar', content: "Assalamu Alaikum. I am your study companion. How can I assist your discipline today?" }
-    ])
-    const [isLoading, setIsLoading] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+
+    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+        api: '/api/chat',
+        initialMessages: [
+            { id: '1', role: 'assistant', content: "Assalamu Alaikum. I am your study companion. How can I assist your discipline today?" }
+        ]
+    })
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -27,26 +23,6 @@ export function ScholarChatWidget() {
     useEffect(() => {
         if (isOpen) scrollToBottom()
     }, [messages, isOpen])
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!input.trim() || isLoading) return
-
-        const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input }
-        setMessages(prev => [...prev, userMsg])
-        setInput('')
-        setIsLoading(true)
-
-        try {
-            const response = await askScholar(userMsg.content)
-            const botMsg: Message = { id: (Date.now() + 1).toString(), role: 'scholar', content: response.message }
-            setMessages(prev => [...prev, botMsg])
-        } catch (error) {
-            setMessages(prev => [...prev, { id: 'err', role: 'scholar', content: "Forgive me, I cannot access the archives right now." }])
-        } finally {
-            setIsLoading(false)
-        }
-    }
 
     return (
         <>
@@ -98,8 +74,8 @@ export function ScholarChatWidget() {
                                 >
                                     <div
                                         className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                                ? 'bg-scholar-gold/10 text-soft-white border border-scholar-gold/20 rounded-tr-sm'
-                                                : 'bg-white/5 text-muted-text border border-white/5 rounded-tl-sm font-serif'
+                                            ? 'bg-scholar-gold/10 text-soft-white border border-scholar-gold/20 rounded-tr-sm'
+                                            : 'bg-white/5 text-muted-text border border-white/5 rounded-tl-sm font-serif'
                                             }`}
                                     >
                                         {msg.content}
@@ -124,7 +100,7 @@ export function ScholarChatWidget() {
                                 <input
                                     type="text"
                                     value={input}
-                                    onChange={(e) => setInput(e.target.value)}
+                                    onChange={handleInputChange}
                                     placeholder="Ask about your progress..."
                                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm text-soft-white placeholder-white/20 focus:outline-none focus:border-scholar-gold/30 transition-colors"
                                 />
