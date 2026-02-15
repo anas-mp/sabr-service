@@ -62,7 +62,7 @@ export function AnalyticsSummary({ data, viewMode }: AnalyticsSummaryProps) {
                             cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                             contentStyle={{ backgroundColor: '#0B0F19', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#F1F5F9' }}
                             itemStyle={{ color: '#C6A75E' }}
-                            formatter={(value: number) => [`${value} hrs`, 'Study Time']}
+                            formatter={(value: number | undefined) => [`${value ?? 0} hrs`, 'Study Time']}
                         />
                         <Bar
                             dataKey="hours"
