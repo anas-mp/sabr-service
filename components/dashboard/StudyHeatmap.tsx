@@ -148,7 +148,6 @@ export function StudyHeatmap({ data }: StudyHeatmapProps) {
                                         w-full h-full rounded-lg flex flex-col items-center justify-center transition-all duration-300
                                         ${getIntensityClass(day.hours)}
                                     `}
-                                    formatter={(value: any) => [`${value} hrs`, 'Study Time']}
                                 >
                                     <span className="text-xs">{day.day}</span>
                                     {day.hours > 0 && (
