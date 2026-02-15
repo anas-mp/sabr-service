@@ -97,6 +97,7 @@ export async function signup(formData: FormData) {
             data: {
                 full_name: fullName,
             },
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
         },
     })
 
@@ -106,7 +107,42 @@ export async function signup(formData: FormData) {
     }
 
     if (data.user && !data.session) {
-        return redirect('/login?message=Account created. Please check your email to confirm.')
+        return redirect(`/verify?email=${encodeURIComponent(email)}`)
+    }
+
+    revalidatePath('/', 'layout')
+    redirect('/dashboard')
+}
+
+export async function verifyEmail(formData: FormData) {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) { return cookieStore.get(name)?.value },
+                set(name: string, value: string, options: CookieOptions) {
+                    try { cookieStore.set({ name, value, ...options }) } catch (error) { }
+                },
+                remove(name: string, options: CookieOptions) {
+                    try { cookieStore.set({ name, value: '', ...options }) } catch (error) { }
+                },
+            },
+        }
+    )
+
+    const email = formData.get('email') as string
+    const code = formData.get('code') as string
+
+    const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: 'signup',
+    })
+
+    if (error) {
+        return redirect(`/verify?email=${encodeURIComponent(email)}&message=${encodeURIComponent(error.message)}`)
     }
 
     revalidatePath('/', 'layout')
